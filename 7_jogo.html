@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jogo de Boliche</title>
+    <style>
+      /* Estilo geral do corpo */
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+      }
+
+      /* Título do jogo */
+      h1 {
+        margin-top: 20px;
+      }
+
+      /* Container da pista com perspectiva 3D */
+      .container-pista {
+        perspective: 1000px;
+        margin: 20px auto;
+        width: 80%;
+        height: 500px;
+        position: relative;
+      }
+
+      /* Pista de boliche com inclinação */
+      .pista {
+        width: 100%;
+        height: 400px;
+        background: linear-gradient(to bottom, #c2b280, #a68d63);
+        border-radius: 10px;
+        position: relative;
+        transform: rotateX(20deg);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Pinos posicionados na parte inferior da pista */
+      .pinos {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+      }
+
+      /* Estilo de cada pino */
+      .pino {
+        width: 40px;
+        height: 80px;
+        background-color: red;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Bola de boliche com três furos */
+      .bola {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 60px;
+        background-color: black;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .bola::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background-color: gray;
+        border-radius: 50%;
+        position: absolute;
+        top: 15px;
+        left: 18px;
+      }
+
+      .bola::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background-color: gray;
+        border-radius: 50%;
+        position: absolute;
+        top: 30px;
+        left: 25px;
+      }
+
+      .bola .terceiro-furo {
+        width: 8px;
+        height: 8px;
+        background-color: gray;
+        border-radius: 50%;
+        position: absolute;
+        top: 22px;
+        left: 35px;
+      }
+
+      /* Estilo da pontuação */
+      .pontuacao {
+        margin: 20px 0;
+        font-size: 20px;
+      }
+
+      /* Mensagem de vitória */
+      #mensagem {
+        font-size: 24px;
+        color: green;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+
+      /* Configuração dos balões */
+      #baloes {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        gap: 10px;
+      }
+
+      .balao {
+        width: 20px;
+        height: 30px;
+        background-color: red;
+        border-radius: 50% 50% 0 0;
+        position: relative;
+        animation: subir 3s ease-in-out infinite;
+      }
+
+      @keyframes subir {
+        0% {
+          transform: translateY(0);
+        }
+
+        100% {
+          transform: translateY(-200px);
+        }
+      }
+
+      .balao::after {
+        content: "";
+        width: 2px;
+        height: 20px;
+        background-color: gray;
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      /* Elementos da comemoração */
+      #comemoracao {
+        display: none;
+        margin-top: 20px;
+      }
+
+      .boneco {
+        width: 100px;
+        height: 100px;
+        background-color: #ffcc00;
+        border-radius: 50%;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .boneco::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 30px;
+        left: 20px;
+      }
+
+      .boneco::after {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 30px;
+        right: 20px;
+      }
+
+      .boneco .boca {
+        width: 40px;
+        height: 20px;
+        background-color: red;
+        border-radius: 0 0 20px 20px;
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Jogo de Boliche</h1>
+
+    <!-- Container principal da pista -->
+    <div class="container-pista">
+      <div class="pista">
+        <!-- Pinos do jogo -->
+        <div class="pinos" id="pinos">
+          <div class="pino"></div>
+          <div class="pino"></div>
+          <div class="pino"></div>
+          <div class="pino"></div>
+        </div>
+        <div class="bola" id="bola"></div>
+      </div>
+    </div>
+
+    <!-- Pontuação do jogador -->
+    <h2 id="pontuacao">Pontuação: 0</h2>
+
+    <!-- Mensagem de vitória -->
+    <div id="mensagem"></div>
+
+    <!-- Comemoração -->
+    <div id="comemoracao">
+      <div id="baloes">
+        <div class="balao" style="background-color: red"></div>
+        <div class="balao" style="background-color: blue"></div>
+        <div class="balao" style="background-color: green"></div>
+      </div>
+      <div class="boneco">
+        <div class="boca"></div>
+      </div>
+    </div>
+
+    <script>
+      // Variáveis de controle
+      let pontuacao = 0;
+      let bola = document.getElementById("bola");
+      let pinos = document.querySelectorAll(".pino");
+      let mensagem = document.getElementById("mensagem");
+      let comemoracao = document.getElementById("comemoracao");
+      let baloes = document.getElementById("baloes");
+
+      // Movimentação da bola com as setas do teclado
+      document.addEventListener("keydown", (event) => {
+        let posicaoAtual = parseInt(getComputedStyle(bola).left);
+
+        if (event.key === "ArrowLeft" && posicaoAtual > 50) {
+          bola.style.left = posicaoAtual - 20 + "px";
+        }
+
+        if (event.key === "ArrowRight" && posicaoAtual < 600) {
+          bola.style.left = posicaoAtual + 20 + "px";
+        }
+
+        if (event.key === " ") {
+          rolarBola();
+        }
+      });
+
+      // Função para rolar a bola
+      function rolarBola() {
+        bola.style.transition = "transform 1s";
+        bola.style.transform = "translateY(-300px)";
+
+        setTimeout(() => {
+          bola.style.transform = "translateY(0)";
+          derrubarPinos();
+        }, 1000);
+      }
+
+      // Função para derrubar os pinos
+      function derrubarPinos() {
+        let pinosDerrubados = 0;
+        pinos.forEach((pino) => {
+          if (Math.random() > 0.5) {
+            pino.style.visibility = "hidden";
+            pinosDerrubados++;
+          }
+        });
+
+        pontuacao += pinosDerrubados;
+        document.getElementById(
+          "pontuacao"
+        ).textContent = `Pontuação: ${pontuacao}`;
+
+        if (pinosDerrubados === pinos.length) {
+          mostrarComemoracao();
+        }
+      }
+
+      // Função para mostrar comemoração
+      function mostrarComemoracao() {
+        mensagem.textContent = "Você venceu! Parabéns!";
+        comemoracao.style.display = "block";
+        baloes.style.display = "flex";
+      }
+    </script>
+  </body>
+</html>

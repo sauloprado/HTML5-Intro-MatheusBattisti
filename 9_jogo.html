@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Corrida 3D</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: white;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin: 20px;
+        }
+
+        .pista-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            perspective: 1000px;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .pista {
+            position: absolute;
+            width: 100%;
+            height: 200%;
+            top: -100%;
+            background: repeating-linear-gradient(
+                0deg,
+                #555,
+                #555 50px,
+                #333 50px,
+                #333 100px
+            );
+            transform: rotateX(45deg);
+            animation: moverPista 1.5s linear infinite;
+        }
+
+        @keyframes moverPista {
+            from {
+                top: -100%;
+            }
+            to {
+                top: 0%;
+            }
+        }
+
+        .cenario {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        .carro {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 120px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/F1_car.svg/1024px-F1_car.svg.png') no-repeat center;
+            background-size: contain;
+        }
+
+        .obstaculo {
+            position: absolute;
+            top: -100px;
+            width: 60px;
+            height: 120px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Car_road_block.svg/1024px-Car_road_block.svg.png') no-repeat center;
+            background-size: contain;
+        }
+
+        .pontuacao {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        #bandeiras {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Racing_flag.svg/512px-Racing_flag.svg.png') no-repeat center;
+            background-size: contain;
+        }
+
+        @keyframes tremular {
+            from {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            to {
+                transform: translateX(-50%) rotate(5deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo de Corrida 3D</h1>
+
+    <div class="pista-container" id="pista">
+        <div class="cenario" id="cenario" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Flag_of_Brazil.svg/1024px-Flag_of_Brazil.svg.png');"></div>
+        <div class="pista"></div>
+        <div class="carro" id="carro"></div>
+    </div>
+
+    <div class="pontuacao" id="pontuacao">Pontuação: 0</div>
+    <div id="bandeiras"></div>
+
+    <script>
+        const carro = document.getElementById("carro");
+        const pista = document.getElementById("pista");
+        const cenario = document.getElementById("cenario");
+        const pontuacaoElem = document.getElementById("pontuacao");
+        const bandeiras = document.getElementById("bandeiras");
+
+        let posCarro = 50; // Posição inicial do carro
+        let pontuacao = 0;
+        let cenarios = [
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Flag_of_Brazil.svg/1024px-Flag_of_Brazil.svg.png',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/1024px-Flag_of_the_United_States.svg.png',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Flag_of_France.svg/1024px-Flag_of_France.svg.png',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Flag_of_Germany.svg/1024px-Flag_of_Germany.svg.png',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Flag_of_Italy.svg/1024px-Flag_of_Italy.svg.png'
+        ];
+        let cenarioAtual = 0;
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft" && posCarro > 10) {
+                posCarro -= 10;
+                carro.style.left = posCarro + "%";
+            } else if (event.key === "ArrowRight" && posCarro < 90) {
+                posCarro += 10;
+                carro.style.left = posCarro + "%";
+            }
+        });
+
+        function criarObstaculo() {
+            const obstaculo = document.createElement("div");
+            obstaculo.classList.add("obstaculo");
+            obstaculo.style.left = Math.random() * 90 + "%";
+            pista.appendChild(obstaculo);
+
+            let posObstaculo = -100;
+
+            const moverObstaculo = setInterval(() => {
+                posObstaculo += 10;
+                obstaculo.style.top = posObstaculo + "px";
+
+                // Verifica colisão
+                if (
+                    posObstaculo > 500 &&
+                    posObstaculo < 600 &&
+                    parseInt(obstaculo.style.left) > posCarro - 10 &&
+                    parseInt(obstaculo.style.left) < posCarro + 10
+                ) {
+                    alert("Game Over!");
+                    window.location.reload();
+                }
+
+                // Remove obstáculo fora da tela
+                if (posObstaculo > 600) {
+                    pista.removeChild(obstaculo);
+                    pontuacao += 10;
+                    pontuacaoElem.textContent = `Pontuação: ${pontuacao}`;
+
+                    // Altera cenário a cada 50 pontos
+                    if (pontuacao % 50 === 0) {
+                        cenarioAtual = (cenarioAtual + 1) % cenarios.length;
+                        cenario.style.backgroundImage = `url('${cenarios[cenarioAtual]}')`;
+                    }
+
+                    // Mostra bandeiras a cada 100 pontos
+                    if (pontuacao % 100 === 0) {
+                        bandeiras.style.display = "block";
+                        bandeiras.style.animation = "tremular 2s ease-in-out infinite";
+
+                        setTimeout(() => {
+                            bandeiras.style.display = "none";
+                        }, 3000);
+                    }
+
+                    clearInterval(moverObstaculo);
+                }
+            }, 50);
+        }
+
+        setInterval(() => {
+            criarObstaculo();
+        }, 1500);
+    </script>
+</body>
+</html>
